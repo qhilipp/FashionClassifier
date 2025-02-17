@@ -8,6 +8,8 @@ import torch.nn as nn
 
 device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
 
+print(f"Running on the model on \"{device}\"")
+
 class Model(nn.Module):
 
     def __init__(self):
@@ -37,7 +39,8 @@ def train(model, data_loader, optimizer, loss_function, epochs=20):
 
     for epoch in range(epochs):
         losses = []
-        for x, y in data_loader:
+        print(f"Epoch {epoch+1}/{epochs}")
+        for i, (x, y) in enumerate(data_loader):
             x = x.to(device)
             y = y.to(device)
             optimizer.zero_grad()
@@ -46,8 +49,9 @@ def train(model, data_loader, optimizer, loss_function, epochs=20):
             loss.backward()
             optimizer.step()
             losses.append(loss.item())
+            print(f'\r{(i+1) / len(data_loader) * 100:.2f}%', end='', flush=True)
         loss_averages.append(np.array(losses).mean())
-        print(f"{(epoch / epochs) * 100}%")
+        print()
 
     plt.plot(loss_averages)
     plt.title("Training loss")
@@ -65,6 +69,8 @@ def evaluate(model, test_data):
             correct += 1
     return correct / len(test_data)
 
+print("Fetching data...")
+
 training_data = datasets.FashionMNIST(
     root="data",
     train=True,
@@ -79,7 +85,11 @@ test_data = datasets.FashionMNIST(
     transform=ToTensor()
 )
 
+print("Done")
+
 model = Model().to(device)
+
+print("Training model...")
 
 train(
     model,
@@ -89,4 +99,8 @@ train(
     epochs=25
 )
 
-print(evaluate(model, test_data))
+print("Done")
+
+evaluation = evaluate(model, test_data)
+
+print(f"Done, the model has an accuracy of {evaluation * 100}%")

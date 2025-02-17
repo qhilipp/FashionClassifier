@@ -11,4 +11,4 @@ Since I have not deployed the Docker image for this project to Docker Hub, you n
 3. create the docker image:  
 `docker build -t fashion-classifier:latest .`
 4. run the image:  
-`docker run -v ($pwd):/app fashion-classifier:latest`
+`docker run -v $(pwd):/app fashion-classifier:latest`
