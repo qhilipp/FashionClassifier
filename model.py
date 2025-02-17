@@ -3,7 +3,7 @@ import torch
 import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
 from torchvision import datasets
-from torchvision.transforms import ToTensor, Lambda, Compose
+from torchvision.transforms import ToTensor
 import torch.nn as nn
 
 device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
