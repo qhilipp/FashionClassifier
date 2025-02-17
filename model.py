@@ -63,12 +63,14 @@ def train(model, data_loader, optimizer, loss_function, epochs):
             losses.append(loss.item())
             print(f'\r{(i+1) / len(data_loader) * 100:.2f}%', end='', flush=True)
         loss_averages.append(np.array(losses).mean())
-        print(f"\nDone, the final loss is {loss_averages[-1]}")
+        print()
 
     plt.plot(loss_averages)
     plt.title("Training loss")
     plt.xlabel("Epoch")
     plt.ylabel("Loss")
+
+    print(f"\nDone, the final loss is {loss_averages[-1]}")
 
 
 def evaluate(model, test_data):
@@ -82,8 +84,11 @@ def evaluate(model, test_data):
         if prediction == y:
             correct += 1
         print(f'\r{(i + 1) / len(test_data) * 100:.2f}%', end='', flush=True)
-    print(f"Done, the model has an accuracy of {evaluation * 100}%")
-    return correct / len(test_data)
+
+    evaluation = correct / len(test_data)
+    print(f"\nDone, the model has an accuracy of {evaluation * 100}%")
+
+    return evaluation
 
 print("Fetching data...")
 
@@ -111,6 +116,6 @@ train(
     epochs=args.epochs
 )
 
-evaluation = evaluate(model, test_data)
+evaluate(model, test_data)
 
 plt.show()
