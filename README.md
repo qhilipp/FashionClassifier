@@ -35,9 +35,9 @@ Make sure you have Python 3.13 installed and the 'python' command pointing to ve
 `python model.py`
 
 ## Arguments 🚀
-| Short Argument | Long Argument    | Type   | Description                                                                                             | Default Value |
-|----------------|------------------|--------|---------------------------------------------------------------------------------------------------------|---------------|
-| `-d`           | `--device`       | str    | The device on which PyTorch should perform all Tensor calculations. Defaults to `cpu` if not available. | `'cpu'`       |
-| `-e`           | `--epochs`       | int    | The number of epochs used to train the model.                                                           | `20`          |
-| `-l`           | `--learnrate`    | float  | The learning rate for the optimizer.                                                                    | `0.001`       |
-| `-b`           | `--batchsize`    | int    | The batch size for the data loader.                                                                     | `64`          |
+| Short Argument | Long Argument            | Type   | Description                                                                                             | Default Value |
+|----------------|--------------------------|--------|---------------------------------------------------------------------------------------------------------|---------------|
+| `-d`           | `--device`               | str    | The device on which PyTorch should perform all Tensor calculations. Defaults to `cpu` if not available. | `'cpu'`       |
+| `-e`           | `--epochs`               | int    | The number of epochs used to train the model.                                                           | `20`          |
+| `-l`           | `--learnrate`            | float  | The learning rate for the optimizer.                                                                    | `0.001`       |
+| `-b`           | `--batchsize`            | int    | The batch size for the data loader.                                                                     | `64`          |
