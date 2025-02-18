@@ -17,7 +17,7 @@ Since I have not deployed the Docker image for this project to Docker Hub, you n
 4. Run the image:  
 `docker run --name fashion-classifier-container -v $(pwd):/app fashion-classifier:latest`  
 or you can specify arguments for the model like so:  
-`docker run --name fashion-classifier-container -v $(pwd):/app fashion-classifier:latest python3.13 model.py --epochs 3`
+`docker run --name fashion-classifier-container -v $(pwd):/app fashion-classifier:latest python3.13 main.py --epochs 3`
 
 ### Option 2 without Docker 🐳❌
 Make sure you have Python 3.13 installed and the 'python' command pointing to version 3.13.
@@ -32,7 +32,7 @@ Make sure you have Python 3.13 installed and the 'python' command pointing to ve
 5. Install the packages  
 `pip install -r requirements.txt`
 6. Run  
-`python model.py`
+`python main.py`
 
 ## Arguments 🚀
 | Short Argument | Long Argument            | Type   | Description                                                                                             | Default Value |

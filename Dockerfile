@@ -9,4 +9,4 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt
 
 # Start command for the Python script
-CMD ["python", "model.py"]
+CMD ["python", "main.py"]
