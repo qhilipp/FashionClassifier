@@ -3,6 +3,7 @@ from torchvision import datasets
 from torchvision.transforms import ToTensor
 from torch.utils.data import DataLoader
 import optuna
+from optuna.pruners import MedianPruner
 import argparse
 import matplotlib.pyplot as plt
 import torch
@@ -20,6 +21,7 @@ parser.add_argument('-te', '--trial_epochs', type=int, help='The number of epoch
 args = parser.parse_args()
 
 device = torch.device(args.device if torch.backends.mps.is_available() else 'cpu')
+optuna.logging.set_verbosity(optuna.logging.WARNING)
 
 print(f"Running on the model on \"{device}\"")
 
@@ -42,19 +44,26 @@ test_data = datasets.FashionMNIST(
 if args.load is not None:
     model = model.Model().to(device)
     model.load_state_dict(torch.load(f"models/{args.load}"))
+
+    for i, (x, y) in enumerate(test_data):
+        prediction = model(x.to(device)).argmax(dim=0).item()
+        print(f"{i+1}/{len(test_data)} Prediction: {prediction} Expected: {y}")
 else:
     print("Finding approximation for optimal hyper parameters...")
 
-    study = optuna.create_study(direction='minimize') #, pruner=optuna.pruners.MedianPruner())
+    study = optuna.create_study(direction='minimize', pruner=MedianPruner(n_warmup_steps=0))
     study.optimize(lambda trial: model.objective(trial, device, training_data, args.trials, args.trial_epochs), n_trials=args.trials)
 
     print(f"Done, found {study.best_params} as optimal hyper parameters")
 
     model = model.Model().to(device)
+    optimizer = torch.optim.Adam(model.parameters(), study.best_params['learn_rate'])
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=3, factor=0.1)
 
     model.fit(
         data_loader=DataLoader(training_data, study.best_params['batch_size'], True),
-        optimizer=torch.optim.Adam(model.parameters(), study.best_params['learn_rate']),
+        optimizer=optimizer,
+        scheduler=scheduler,
         loss_function=nn.CrossEntropyLoss(),
         epochs=args.epochs,
         device=device,

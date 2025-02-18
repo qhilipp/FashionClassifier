@@ -1,6 +1,9 @@
+import time
+
 import numpy as np
 import torch
 import matplotlib.pyplot as plt
+from optuna import TrialPruned
 from torch.utils.data import DataLoader
 import torch.nn as nn
 
@@ -37,7 +40,7 @@ class Model(nn.Module):
         return self.stack(x)
 
 
-    def fit(self, data_loader, optimizer, loss_function, epochs, device, verbose=False) -> float:
+    def fit(self, data_loader, optimizer, scheduler, loss_function, epochs, device, trial=None, verbose=False) -> float:
         if verbose:
             print("Training model...")
 
@@ -63,8 +66,19 @@ class Model(nn.Module):
                     print(f'\r{(i+1) / len(data_loader) * 100:.2f}%', end='', flush=True)
 
             loss_averages.append(np.array(losses).mean())
+
+            scheduler.step(loss_averages[-1])
+
             if verbose:
                 print()
+
+            if trial is not None:
+                trial.report(time.time(), epoch)
+
+                if trial.should_prune():
+                    if verbose:
+                        print(f"Trial {trial.number} was pruned!")
+                    raise TrialPruned()
 
         if verbose:
             plt.plot(loss_averages)
@@ -98,20 +112,25 @@ class Model(nn.Module):
 
 def objective(trial, device, training_data, trials, trial_epochs) -> float:
     learn_rate = trial.suggest_float("learn_rate", 1e-5, 1e-1, log=True)
-    batch_size = trial.suggest_int("batch_size", 32, 128, log=True)
+    batch_size = trial.suggest_categorical("batch_size", [32, 64, 128])
 
     model = Model().to(device)
+    optimizer = torch.optim.Adam(model.parameters(), learn_rate)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=3, factor=0.1)
 
     print(f"Trial {trial.number+1}/{trials}")
 
     loss = model.fit(
         data_loader=DataLoader(training_data, batch_size, True),
-        optimizer=torch.optim.Adam(model.parameters(), learn_rate),
+        optimizer=optimizer,
+        scheduler=scheduler,
         loss_function=nn.CrossEntropyLoss(),
         epochs=trial_epochs,
+        trial=trial,
+        verbose=True,
         device=device
     )
 
-    print(f"Done, arguments {trial.params} resulted in {loss}")
+    print(f"Done, arguments {trial.params} resulted in a loss of {loss}")
 
     return loss
