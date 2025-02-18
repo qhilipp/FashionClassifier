@@ -9,16 +9,25 @@ class Model(nn.Module):
     def __init__(self):
         super().__init__()
         self.stack = nn.Sequential(
-            nn.Conv2d(in_channels=1, out_channels=32, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(1, 32, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(32),
             nn.LeakyReLU(0.01),
-            nn.MaxPool2d(kernel_size=2, stride=2),
+            nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(64),
+            nn.LeakyReLU(0.01),
+            nn.MaxPool2d(2, 2),
+
+            nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(128),
+            nn.LeakyReLU(0.01),
+            nn.MaxPool2d(2, 2),
+
             nn.Flatten(),
-            nn.Linear(6272, 256),
-            nn.Dropout(0.1),
+            nn.Linear(128 * 7 * 7, 256),
+            nn.Dropout(0.3),
             nn.LeakyReLU(0.01),
             nn.Linear(256, 256),
-            nn.Dropout(0.1),
+            nn.Dropout(0.3),
             nn.LeakyReLU(0.01),
             nn.Linear(256, 10)
         )
