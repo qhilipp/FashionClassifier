@@ -8,6 +8,8 @@ import argparse
 import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
+import numpy as np
+import torch.nn.functional as F
 
 parser = argparse.ArgumentParser(description="A DeepLearning model using PyTorch and Optuna to classify Fashion MNIST images")
 
@@ -22,6 +24,36 @@ args = parser.parse_args()
 
 device = torch.device(args.device if torch.backends.mps.is_available() else 'cpu')
 optuna.logging.set_verbosity(optuna.logging.WARNING)
+
+def evaluate_model(model):
+    label_map = [
+        "T-Shirt/Top", "Trouser", "Pullover", "Dress", "Coat",
+        "Sandal", "Shirt", "Sneaker", "Bag", "Ankle Boot"
+    ]
+
+    random_indices = np.random.choice(len(test_data), 15, replace=False)
+
+    subset = [test_data[i] for i in random_indices]
+
+    fig, axes = plt.subplots(3, 5, figsize=(10, 7))
+
+    for i, ax in enumerate(axes.flat):
+        ax.imshow(subset[i][0][0], cmap='gray')
+        prediction = F.softmax(model(torch.tensor(subset[i][0])))
+        predicted_label = prediction.argmax(dim=1).item()
+        ax.set_title(
+            f'Prediction: {label_map[predicted_label]}\nConfidence: {prediction[0][predicted_label].item() * 100:.2f}%\nActual: {label_map[subset[i][1]]}',
+            fontsize=8,
+            loc='left'
+        )
+        ax.axis('off')
+
+    plt.tight_layout()
+
+    accuracy = model.evaluate(test_data, device)
+    fig.canvas.manager.set_window_title(f'Accuracy: {accuracy * 100:.2f}%')
+
+    plt.show()
 
 print(f"Running on the model on \"{device}\"")
 
@@ -44,10 +76,7 @@ test_data = datasets.FashionMNIST(
 if args.load is not None:
     model = model.Model().to(device)
     model.load_state_dict(torch.load(f"models/{args.load}"))
-
-    for i, (x, y) in enumerate(test_data):
-        prediction = model(x.to(device)).argmax(dim=0).item()
-        print(f"{i+1}/{len(test_data)} Prediction: {prediction} Expected: {y}")
+    evaluate_model(model)
 else:
     print("Finding approximation for optimal hyper parameters...")
 
@@ -70,9 +99,7 @@ else:
         verbose=True
     )
 
-    model.evaluate(test_data, device=device)
-
-    plt.show()
+    evaluate_model(model)
 
 
 if args.save is not None:
