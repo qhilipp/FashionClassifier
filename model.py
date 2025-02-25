@@ -1,9 +1,12 @@
 import time
+from typing import Any
 
 import numpy as np
+import optuna
 import torch
 import matplotlib.pyplot as plt
 from optuna import TrialPruned
+from optuna.pruners import MedianPruner
 from torch.utils.data import DataLoader
 import torch.nn as nn
 
@@ -89,7 +92,7 @@ class Model(nn.Module):
         if verbose:
             print(f"\nDone, the final loss is {loss_averages[-1]}")
 
-        return loss_averages[-1]
+        return loss_averages
 
 
     def evaluate(self, test_data, device) -> float:
@@ -110,7 +113,16 @@ class Model(nn.Module):
         return evaluation
 
 
-def objective(trial, device, training_data, trials, trial_epochs) -> float:
+def tune_hyperparameters(device, training_data, trials, trial_epochs) -> (dict[str, Any], [float]):
+    study = optuna.create_study(direction='minimize', pruner=MedianPruner(n_warmup_steps=0))
+
+    losses = []
+    study.optimize(lambda trial: objective(trial, device, training_data, trials, trial_epochs, losses), n_trials=trials)
+
+    return study.best_params, losses
+
+
+def objective(trial, device, training_data, trials, trial_epochs, loss_map) -> float:
     learn_rate = trial.suggest_float("learn_rate", 1e-5, 1e-1, log=True)
     batch_size = trial.suggest_categorical("batch_size", [32, 64, 128])
 
@@ -120,7 +132,7 @@ def objective(trial, device, training_data, trials, trial_epochs) -> float:
 
     print(f"Trial {trial.number+1}/{trials}")
 
-    loss = model.fit(
+    losses = model.fit(
         data_loader=DataLoader(training_data, batch_size, True),
         optimizer=optimizer,
         scheduler=scheduler,
@@ -131,6 +143,8 @@ def objective(trial, device, training_data, trials, trial_epochs) -> float:
         device=device
     )
 
-    print(f"Done, arguments {trial.params} resulted in a loss of {loss}")
+    loss_map.append(losses)
 
-    return loss
+    print(f"Done, arguments {trial.params} resulted in a loss of {losses[-1]}")
+
+    return losses[-1]
