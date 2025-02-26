@@ -1,4 +1,3 @@
-import time
 from typing import Any
 
 import numpy as np
@@ -43,8 +42,8 @@ class Model(nn.Module):
         return self.stack(x)
 
 
-    def fit(self, data_loader, optimizer, scheduler, loss_function, epochs, device, trial=None, verbose=False) -> float:
-        if verbose:
+    def fit(self, data_loader, optimizer, scheduler, loss_function, epochs, device, trial=None, loss_map=None, verbose=0):
+        if verbose > 0:
             print("Training model...")
 
         self.train()
@@ -65,34 +64,36 @@ class Model(nn.Module):
                 optimizer.step()
 
                 losses.append(loss.item())
-                if verbose:
+                if verbose > 0:
                     print(f'\r{(i+1) / len(data_loader) * 100:.2f}%', end='', flush=True)
 
             loss_averages.append(np.array(losses).mean())
 
             scheduler.step(loss_averages[-1])
 
-            if verbose:
+            if verbose > 0:
                 print()
 
             if trial is not None:
-                trial.report(time.time(), epoch)
+                trial.report(loss_averages[-1], epoch)
 
                 if trial.should_prune():
-                    if verbose:
-                        print(f"Trial {trial.number} was pruned!")
+                    if verbose > 0:
+                        print(f"Trial {trial.number+1} was pruned!")
+                        loss_map.append(loss_averages + [np.nan] * (epochs - len(loss_averages)))
                     raise TrialPruned()
 
-        if verbose:
+        if verbose > 1:
             plt.plot(loss_averages)
             plt.title("Training loss")
             plt.xlabel("Epoch")
             plt.ylabel("Loss")
 
-        if verbose:
+        if verbose > 0:
             print(f"\nDone, the final loss is {loss_averages[-1]}")
 
-        return loss_averages
+        if loss_map is not None:
+            loss_map.append(loss_averages)
 
 
     def evaluate(self, test_data, device) -> float:
@@ -113,18 +114,17 @@ class Model(nn.Module):
         return evaluation
 
 
-def tune_hyperparameters(device, training_data, trials, trial_epochs) -> (dict[str, Any], [float]):
-    study = optuna.create_study(direction='minimize', pruner=MedianPruner(n_warmup_steps=0))
+def tune_hyperparameters(device, training_data, trials, trial_epochs, loss_map) -> (dict[str, Any]):
+    study = optuna.create_study(direction='minimize', pruner=MedianPruner(n_warmup_steps=0, n_startup_trials=1))
 
-    losses = []
-    study.optimize(lambda trial: objective(trial, device, training_data, trials, trial_epochs, losses), n_trials=trials)
+    study.optimize(lambda trial: objective(trial, device, training_data, trials, trial_epochs, loss_map), n_trials=trials)
 
-    return study.best_params, losses
+    return study.best_params
 
 
 def objective(trial, device, training_data, trials, trial_epochs, loss_map) -> float:
     learn_rate = trial.suggest_float("learn_rate", 1e-5, 1e-1, log=True)
-    batch_size = trial.suggest_categorical("batch_size", [32, 64, 128])
+    batch_size = trial.suggest_categorical("batch_size", [24, 32, 48])
 
     model = Model().to(device)
     optimizer = torch.optim.Adam(model.parameters(), learn_rate)
@@ -132,18 +132,19 @@ def objective(trial, device, training_data, trials, trial_epochs, loss_map) -> f
 
     print(f"Trial {trial.number+1}/{trials}")
 
-    losses = model.fit(
+    model.fit(
         data_loader=DataLoader(training_data, batch_size, True),
         optimizer=optimizer,
         scheduler=scheduler,
         loss_function=nn.CrossEntropyLoss(),
         epochs=trial_epochs,
         trial=trial,
-        verbose=True,
+        verbose=1,
+        loss_map=loss_map,
         device=device
     )
 
-    loss_map.append(losses)
+    losses = loss_map[-1]
 
     print(f"Done, arguments {trial.params} resulted in a loss of {losses[-1]}")
 

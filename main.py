@@ -3,7 +3,6 @@ from torchvision import datasets
 from torchvision.transforms import ToTensor
 from torch.utils.data import DataLoader
 import optuna
-from optuna.pruners import MedianPruner
 import argparse
 import matplotlib.pyplot as plt
 import torch
@@ -62,15 +61,17 @@ def train_model():
     if args.load_hyper_parameters is None:
         print("Finding approximation for optimal hyper parameters...")
 
-        best_params, losses = mdl.tune_hyperparameters(device, training_data, args.trials, args.trial_epochs)
+        loss_map = []
+        best_params = mdl.tune_hyperparameters(device, training_data, args.trials, args.trial_epochs, loss_map)
 
         if args.save_hyper_parameters is not None:
             with open(args.save_hyper_parameters, 'w') as file:
                 json.dump(best_params, file, indent=4)
 
-        plt.plot(losses, marker='o', linestyle='-')
-        plt.xlabel('Trial')
-        plt.ylabel('Loss')
+        plt.imshow(loss_map, aspect='auto', cmap='viridis')
+        plt.colorbar(label='Loss')
+        plt.xlabel('Epoch')
+        plt.ylabel('Trial')
         plt.title('Loss for different hyper parameters')
         plt.show()
 
@@ -92,7 +93,7 @@ def train_model():
         loss_function=nn.CrossEntropyLoss(),
         epochs=args.epochs,
         device=device,
-        verbose=True
+        verbose=2
     )
 
     evaluate_model(model)
