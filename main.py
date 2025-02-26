@@ -40,13 +40,15 @@ def evaluate_model(model):
     fig, axes = plt.subplots(3, 5, figsize=(10, 7))
 
     for i, ax in enumerate(axes.flat):
-        ax.imshow(subset[i][0][0], cmap='gray')
+        ax.imshow(subset[i][0][0])
         prediction = F.softmax(model(torch.tensor(subset[i][0]).to(device)))
         predicted_label = prediction.argmax(dim=1).item()
+        color = 'red' if predicted_label != subset[i][1] else 'black'
         ax.set_title(
             f'Prediction: {label_map[predicted_label]}\nConfidence: {prediction[0][predicted_label].item() * 100:.2f}%\nActual: {label_map[subset[i][1]]}',
             fontsize=8,
-            loc='left'
+            loc='left',
+            color=color
         )
         ax.axis('off')
 
