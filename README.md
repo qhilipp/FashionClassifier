@@ -12,10 +12,10 @@ As you can see, the model is pretty confident for all predictions that it got co
 prediction that it got wrong, which I assume is due to the similarity of Shirts and Pullovers.
 
 ## Installation 💻
-### Option 1 with Docker 🐳 (Recommended)
+### Option 1 with Docker 🐳
 Since I have not deployed the Docker image for this project to Docker Hub, you need to create the image yourself.
 1. Clone the repo:  
-`git clone git@github.com:qhilipp/FashionClassifier.git`
+`git clone https://github.com/qhilipp/FashionClassifier`
 2. cd into the repo:  
 `cd FashionClassifier`
 3. Create the docker image:  
@@ -26,11 +26,11 @@ Since I have not deployed the Docker image for this project to Docker Hub, you n
 ### Option 2 without Docker 🐳❌
 Make sure you have Python 3.13 installed and the 'python' command pointing to version 3.13.
 1. Clone the repo:  
-`git clone git@github.com:qhilipp/FashionClassifier.git`
+`git clone https://github.com/qhilipp/FashionClassifier`
 2. cd into the repo:  
 `cd FashionClassifier`
 3. Create a virtual environment  
-`python -m venv env` or with Conda `conda -n fashion-classifier python=3.13`
+`python -m venv env` or with Conda `conda create -n fashion-classifier python=3.13`
 4. Activate it  
 `source evn/bin/activate` or with Conda `conda activate`
 5. Install the packages  
