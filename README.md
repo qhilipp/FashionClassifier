@@ -5,7 +5,7 @@ This is my first time using PyTorch and intended to teach me some basic concepts
 ## Performance 📊
 I tuned the hyper-parameters for 20 trials with 5 epochs each and then trained the model for 25 epochs.
 This resulted in an accuracy of 93.19% for unseen test data.
-![Trials](graphs/Trials.png) ![Loss](graphs/Loss.png)
+![Trials](graphs/Trials.png) ![Loss](graphs/Loss.png)  
 The following graph shows a sample of the test data along with the models predictions.
 ![Sample](graphs/Sample.png)
 As you can see, the model is pretty confident for all predictions that it got correct, but also relatively confident for the one 
@@ -20,10 +20,8 @@ Since I have not deployed the Docker image for this project to Docker Hub, you n
 `cd FashionClassifier`
 3. Create the docker image:  
 `docker build -t fashion-classifier:latest .`
-4. Run the image:  
-`docker run --name fashion-classifier-container -v $(pwd):/app fashion-classifier:latest`  
-or you can specify arguments for the model like so:  
-`docker run --name fashion-classifier-container -v $(pwd):/app fashion-classifier:latest python3.13 main.py --epochs 3`
+4. Run the image:   
+`docker run --name fashion-classifier-container -v $(pwd):/app fashion-classifier:latest python3.13 main.py --load model`
 
 ### Option 2 without Docker 🐳❌
 Make sure you have Python 3.13 installed and the 'python' command pointing to version 3.13.
@@ -32,23 +30,24 @@ Make sure you have Python 3.13 installed and the 'python' command pointing to ve
 2. cd into the repo:  
 `cd FashionClassifier`
 3. Create a virtual environment  
-`python -m venv env`
+`python -m venv env` or with Conda `conda -n fashion-classifier python=3.13`
 4. Activate it  
-`source evn/bin/activate`
+`source evn/bin/activate` or with Conda `conda activate`
 5. Install the packages  
 `pip install -r requirements.txt`
 6. Run  
-`python main.py`
+`python main.py --load model`
 
 ## Arguments 🚀
-| Argument                    | Kurzform | Typ   | Beschreibung                                                                                                    | Standardwert |
-|-----------------------------|----------|-------|-----------------------------------------------------------------------------------------------------------------|--------------|
-| `--load`                    | `-l`     | str   | Der Name der Datei, aus der das Modell geladen werden soll.                                                     | `None`       |
-| `--save`                    | `-s`     | str   | Der Name der Datei, in der das Modell gespeichert werden soll.                                                  | `None`       |
-| `--device`                  | `-d`     | str   | Das Gerät, auf dem PyTorch die Tensorberechnungen ausführen soll (`cpu` oder `cuda`, falls verfügbar).          | `'cpu'`      |
-| `--epochs`                  | `-e`     | int   | Die Anzahl der Epochen, die zum Trainieren des Modells verwendet werden.                                        | `20`         |
-| `--trials`                  | `-t`     | int   | Die Anzahl der Versuche, um optimale Hyperparameter zu finden.                                                  | `5`          |
-| `--trial_epochs`            | `-te`    | int   | Die Anzahl der Epochen pro Versuch beim Finden optimaler Hyperparameter.                                        | `2`          |
-| `--load_hyper_parameters`   | `-lh`    | str   | Der Name einer JSON-Datei, aus der das Modell seine Hyperparameter laden soll.                                  | `None`       |
-| `--save_hyper_parameters`   | `-sh`    | str   | Der Name einer JSON-Datei, in der das Modell seine Hyperparameter speichern soll.                               | `None`       |
+| Argument                    | Shortform | Type | Description                                                                                             | Default Value |
+|-----------------------------|-----------|------|---------------------------------------------------------------------------------------------------------|---------------|
+| `--load`                    | `-l`      | str  | The name of the file from which the model should be loaded.                                             | `None`        |
+| `--save`                    | `-s`      | str  | The name of the file to which the model should be saved.                                                | `None`        |
+| `--device`                  | `-d`      | str  | The device on which PyTorch should perform the tensor calculations (`cpu` or `cuda`, if available).     | `'cpu'`       |
+| `--epochs`                  | `-e`      | int  | The number of epochs used to train the model.                                                           | `20`          |
+| `--trials`                  | `-t`      | int  | The number of trials to find optimal hyperparameters.                                                   | `5`           |
+| `--trial_epochs`            | `-te`     | int  | The number of epochs per trial when finding optimal hyperparameters.                                    | `2`           |
+| `--load_hyper_parameters`   | `-lh`     | str  | The name of a JSON file from which the model should load its hyperparameters.                           | `None`        |
+| `--save_hyper_parameters`   | `-sh`     | str  | The name of a JSON file to which the model should save its hyperparameters.                             | `None`        |
+
 
